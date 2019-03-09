@@ -1,0 +1,3 @@
+[submodule "ss-pybullet"]
+	path = ss-pybullet
+	url = https://github.com/caelan/ss-pybullet.git
