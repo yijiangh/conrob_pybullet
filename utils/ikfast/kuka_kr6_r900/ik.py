@@ -5,7 +5,7 @@ sys.path.append(os.path.join(directory, '../../../ss_pybullet'))
 
 from pybullet_tools.ikfast.utils import compute_forward_kinematics, compute_inverse_kinematics, select_solution
 from pybullet_tools.utils import multiply, get_link_pose, get_movable_joints, \
-    link_from_name, get_joint_positions, invert, violates_limits, get_pose
+    link_from_name, get_joint_positions, invert, violates_limits, get_pose, get_distance
 
 BASE_FRAME = 'robot_base_link'
 IK_FRAME = 'robot_tool0'
@@ -37,13 +37,18 @@ def get_ik_generator(robot, tool_pose):
     #world_from_base == get_pose(robot)
     base_from_tool = multiply(invert(world_from_base), tool_pose)
     base_from_ik = multiply(base_from_tool, get_tool_from_ik(robot))
-    ik_joints = get_movable_joints(robot)
-    confs = compute_inverse_kinematics(get_ik, base_from_ik)
-    yield [q for q in confs if not violates_limits(robot, ik_joints, q)]
+    yield compute_inverse_kinematics(get_ik, base_from_ik)
 
-def sample_tool_ik(robot, tool_pose, get_all=False, **kwargs):
+def sample_tool_ik(robot, tool_pose, closest_only=False, get_all=False, **kwargs):
     generator = get_ik_generator(robot, tool_pose)
+    ik_joints = get_movable_joints(robot)
+    solutions = next(generator)
+    if closest_only and solutions:
+        current_conf = get_joint_positions(robot, ik_joints)
+        solutions = [min(solutions, key=lambda conf: get_distance(current_conf, conf))]
+    solutions = list(filter(lambda conf: not violates_limits(robot, ik_joints, conf), solutions))
     if get_all:
-        return next(generator)
+        # choreo needs all solution to be returned
+        return solutions
     else:
-        return select_solution(next(generator), **kwargs)
+        return select_solution(robot, ik_joints, solutions, **kwargs)
