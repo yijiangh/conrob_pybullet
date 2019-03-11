@@ -26,21 +26,7 @@ USE_IKFAST = True
 DEBUG_FAILURE = True
 ENABLE_SELF_COLLISION = False
 
-ARM = 'left'  # left | right
-ETH_RFL_URDF = "../models/eth_rfl/urdf/eth_rfl.urdf"
-
-SIGN_FROM_ARM = {
-    'left': -1,
-    'right': +1,
-}
-
-def get_ik_fn(robot, fixed=[], teleport=False, num_attempts=10, self_collisions=True):
-    # movable_joints = get_movable_joints(robot)
-    torso_arm = get_torso_arm_USE_IKFAST = True
-DEBUG_FAILURE = True
-ENABLE_SELF_COLLISION = False
-
-ARM = 'left'  # left | right
+ARM = 'right'  # left | right
 ETH_RFL_URDF = "../models/eth_rfl/urdf/eth_rfl.urdf"
 
 SIGN_FROM_ARM = {
@@ -90,7 +76,7 @@ def get_ik_fn(robot, fixed=[], teleport=False, num_attempts=10, self_collisions=
             conf = BodyConf(robot, joints=arm_joints)
 
             if USE_IKFAST:
-                q_grasp = sample_tool_ik(robot, ARM, gripper_pose, nearby_conf=q_approach)
+                q_grasp = sample_tool_ik(robot, ARM, gripper_pose, closest_only=True)
                 if q_grasp is not None:
                     set_joint_positions(robot, torso_arm, q_grasp)
             else:

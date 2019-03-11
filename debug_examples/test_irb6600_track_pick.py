@@ -47,7 +47,7 @@ def get_ik_fn(robot, fixed=[], teleport=False, num_attempts=10, self_collisions=
             conf = BodyConf(robot, joints=movable_joints)
 
             if USE_IKFAST:
-                q_grasp = sample_tool_ik(robot, gripper_pose, nearby_conf=q_approach)
+                q_grasp = sample_tool_ik(robot, gripper_pose, closest_only=True)
                 if q_grasp is not None:
                     set_joint_positions(robot, movable_joints, q_grasp)
             else:

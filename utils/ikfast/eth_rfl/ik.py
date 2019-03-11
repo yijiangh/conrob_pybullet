@@ -8,8 +8,8 @@ sys.path.append(os.path.join(directory, '../../../ss_pybullet'))
 from pybullet_tools.ikfast.utils import get_ik_limits, compute_forward_kinematics, \
     compute_inverse_kinematics, select_solution
 from pybullet_tools.utils import multiply, get_link_pose, \
-    link_from_name, get_joint_positions, invert, violates_limits
-from ...eth_rfl_utils import get_torso_arm_joints, get_torso_joint, get_tool_frame
+    link_from_name, get_joint_positions, invert, violates_limits, get_distance, get_movable_joints
+from ...eth_rfl_utils import get_torso_arm_joints, get_torso_joint, get_tool_frame, get_arm_joint_names
 
 IK_FRAMES = {
     'left': 'l_robot_tool0',
@@ -63,13 +63,12 @@ def get_tool_from_ik(robot, arm):
     return multiply(invert(world_from_tool), world_from_ik)
 
 
-def sample_tool_ik(robot, arm, tool_pose, nearby_conf=None, max_attempts=10, **kwargs):
+def sample_tool_ik(robot, arm, tool_pose, closest_only=False, get_all=False, **kwargs):
     generator = get_ik_generator(robot, arm, tool_pose, **kwargs)
-    for _ in range(max_attempts):
-        try:
-            solutions = next(generator)
-            if solutions:
-                return select_solution(solutions, nearby_conf=nearby_conf)
-        except StopIteration:
-            break
-    return None
+    ik_joints = get_torso_arm_joints(robot, arm)
+    solutions = next(generator)
+    if closest_only and solutions:
+        current_conf = get_joint_positions(robot, ik_joints)
+        solutions = [min(solutions, key=lambda conf: get_distance(current_conf, conf))]
+    solutions = list(filter(lambda conf: not violates_limits(robot, ik_joints, conf), solutions))
+    return solutions if get_all else select_solution(robot, ik_joints, solutions, **kwargs)

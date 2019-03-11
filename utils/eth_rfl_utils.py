@@ -17,6 +17,7 @@ def torso_from_arm(arm):
     return '{}_torso'.format(arm)
 
 def prefix_from_arm(arm):
+    # 'l' or 'r'
     return arm[0]
 
 ETH_RFL_GROUPS = {

@@ -47,8 +47,4 @@ def sample_tool_ik(robot, tool_pose, closest_only=False, get_all=False, **kwargs
         current_conf = get_joint_positions(robot, ik_joints)
         solutions = [min(solutions, key=lambda conf: get_distance(current_conf, conf))]
     solutions = list(filter(lambda conf: not violates_limits(robot, ik_joints, conf), solutions))
-    if get_all:
-        # choreo needs all solution to be returned
-        return solutions
-    else:
-        return select_solution(robot, ik_joints, solutions, **kwargs)
+    return solutions if get_all else select_solution(robot, ik_joints, solutions, **kwargs)
