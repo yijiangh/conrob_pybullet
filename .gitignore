@@ -12,3 +12,6 @@ gurobi.log
 **/*.~un
 
 *.ipynb_checkpoints/
+
+# ikfast compiled module
+*.so
