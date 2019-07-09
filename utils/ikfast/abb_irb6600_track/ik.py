@@ -57,6 +57,7 @@ def get_ik_generator(robot, tool_pose, track_limits=False):
         confs = compute_inverse_kinematics(get_ik, base_from_ik, sampled_values)
         yield [q for q in confs if not violates_limits(robot, ik_joints, q)]
 
+# TODO: external track joint sampler, e.g. sampling near the target object
 
 def get_tool_from_ik(robot):
     world_from_tool = get_link_pose(robot, link_from_name(robot, TOOL_FRAME))
@@ -65,12 +66,17 @@ def get_tool_from_ik(robot):
     return multiply(invert(world_from_tool), world_from_ik)
 
 
-def sample_tool_ik(robot, tool_pose, closest_only=False, get_all=False, **kwargs):
+def sample_tool_ik(robot, tool_pose, max_attempts=10, closest_only=False, get_all=False, **kwargs):
     generator = get_ik_generator(robot, tool_pose, **kwargs)
     ik_joints = get_movable_joints(robot)
-    solutions = next(generator)
-    if closest_only and solutions:
-        current_conf = get_joint_positions(robot, ik_joints)
-        solutions = [min(solutions, key=lambda conf: get_distance(current_conf, conf))]
-    solutions = list(filter(lambda conf: not violates_limits(robot, ik_joints, conf), solutions))
-    return solutions if get_all else select_solution(robot, ik_joints, solutions, **kwargs)
+    for _ in range(max_attempts):
+        try:
+            solutions = next(generator)
+            if closest_only and solutions:
+                current_conf = get_joint_positions(robot, ik_joints)
+                solutions = [min(solutions, key=lambda conf: get_distance(current_conf, conf))]
+            solutions = list(filter(lambda conf: not violates_limits(robot, ik_joints, conf), solutions))
+            return solutions if get_all else select_solution(robot, ik_joints, solutions, **kwargs)
+        except StopIteration:
+            break
+    return None
