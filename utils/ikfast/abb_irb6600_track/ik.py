@@ -23,6 +23,11 @@ TRACK_ARM_JOINT = TRACK_JOINT + ARM_JOINTS
 def get_track_arm_joints(robot):
     return joints_from_names(robot, TRACK_ARM_JOINT)
 
+
+def get_track_joint(robot):
+    return joints_from_names(robot, TRACK_JOINT)
+
+
 #####################################
 
 def get_tool_pose(robot):
@@ -45,14 +50,17 @@ def is_ik_compiled():
         return False
 
 
-def get_ik_generator(robot, tool_pose, track_limits=False):
+def get_ik_generator(robot, tool_pose, track_limits=False, prev_free_list=[]):
     from .ikfast_abb_irb6600_track import get_ik
     world_from_base = get_link_pose(robot, link_from_name(robot, BASE_FRAME))
     base_from_tool = multiply(invert(world_from_base), tool_pose)
     base_from_ik = multiply(base_from_tool, get_tool_from_ik(robot))
     sampled_limits = get_ik_limits(robot, joint_from_name(robot, *TRACK_JOINT), track_limits)
     while True:
-        sampled_values = [random.uniform(*sampled_limits)]
+        if not prev_free_list:
+            sampled_values = [random.uniform(*sampled_limits)]
+        else:
+            sampled_values = prev_free_list
         ik_joints = get_track_arm_joints(robot)
         confs = compute_inverse_kinematics(get_ik, base_from_ik, sampled_values)
         yield [q for q in confs if not violates_limits(robot, ik_joints, q)]
@@ -66,8 +74,8 @@ def get_tool_from_ik(robot):
     return multiply(invert(world_from_tool), world_from_ik)
 
 
-def sample_tool_ik(robot, tool_pose, max_attempts=10, closest_only=False, get_all=False, **kwargs):
-    generator = get_ik_generator(robot, tool_pose, **kwargs)
+def sample_tool_ik(robot, tool_pose, max_attempts=10, closest_only=False, get_all=False, prev_free_list=[], **kwargs):
+    generator = get_ik_generator(robot, tool_pose, prev_free_list=prev_free_list, **kwargs)
     ik_joints = get_movable_joints(robot)
     for _ in range(max_attempts):
         try:
