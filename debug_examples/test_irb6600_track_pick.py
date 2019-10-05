@@ -12,7 +12,7 @@ from pybullet_tools.kuka_primitives import BodyPose, BodyConf, Command, \
     get_free_motion_gen, get_holding_motion_gen, BodyPath, Attach
 from pybullet_tools.utils import WorldSaver, connect, dump_world, set_pose, \
     Pose, Point, stable_z, BLOCK_URDF, load_model, wait_for_interrupt, disconnect, user_input, update_state, \
-    disable_real_time, load_pybullet
+    disable_real_time, load_pybullet, draw_pose
 from pybullet_tools.utils import get_movable_joints, \
     set_joint_positions, enable_gravity, end_effector_from_body, approach_from_grasp, \
     inverse_kinematics, pairwise_collision, get_sample_fn, plan_direct_joint_motion, HideOutput, LockRenderer
@@ -33,6 +33,8 @@ def get_ik_fn(robot, fixed=[], teleport=False, num_attempts=10, self_collisions=
         obstacles = [body] + fixed
         gripper_pose = end_effector_from_body(pose.pose, grasp.grasp_pose)
         approach_pose = approach_from_grasp(grasp.approach_pose, gripper_pose)
+        draw_pose(gripper_pose, length=0.04)
+        draw_pose(approach_pose, length=0.04)
 
         for _ in range(num_attempts):
             if USE_IKFAST:
