@@ -137,6 +137,7 @@
     <parent link="robot_base_link"/>
     <child link="robot_link_1"/>
     <axis xyz="0 0 -1"/>
+    <!-- caelan: changed the joint limits here -->
     <!--limit effort="0" lower="-2.96705972839" upper="2.96705972839" velocity="6.28318530718"/-->
     <limit effort="0" lower="-1.57" upper="1.57" velocity="6.28318530718"/>
   </joint>
